@@ -1,0 +1,6 @@
+defaultAuthMethod:
+enabled: true
+# Vault namespace for the VaultAuthMethod CR
+namespace: "app"
+method: kubernetes
+mount: kubernetes 

@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: vault-mysql-app
+  labels:
+    app: mysql-sa
+spec:
+  selector:
+    matchLabels:
+      app: mysql-sa
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/tls-skip-verify: "true"
+        vault.hashicorp.com/agent-inject-secret-mysql-secret: "secret/basic-secret/mysql-secret"
+        # vault.hashicorp.com/agent-inject-template-mysql-secret: |
+        #     {{- with secret "secret/basic-secret/mysql-secret" -}}
+        #     {
+        #       "password" : "{{ .Data.password }}"
+        #     }
+        #     {{- end }}
+        vault.hashicorp.com/role: "mysql-secret-role"
+      labels:
+        app: mysql-sa
+    spec:
+      serviceAccountName: mysql-sa
+      containers:
+      - name: mysql 
+        image: mysql:8.0
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: vault:secret/basic-secret/mysql-secret#password
+        ports:
+        - containerPort: 3306
+          name: mysql
+      #   volumeMounts:
+      #   - name: mysql-persistent-storage
+      #     mountPath: /var/lib/mysql
+      # volumes:
+      # - name: mysql-persistent-storage
+      #   persistentVolumeClaim:
+      #     claimName: mysql-pv-claim
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mysql-sa
+  namespace: vault-mysql-app
+  labels:
+    app: mysql-sa
+    
